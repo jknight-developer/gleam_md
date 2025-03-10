@@ -8,11 +8,11 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/regex.{type Match}
+import gleam/regexp.{type Match}
 import gleam/result
 import gleam/string
 
-const regex_options = regex.Options(case_insensitive: True, multi_line: True)
+const regex_options = regexp.Options(case_insensitive: True, multi_line: True)
 
 ///
 /// Options that can be used with `render_with_options`
@@ -53,8 +53,8 @@ pub fn render_with_options(markdown: String, options: Options) {
   |> parse_paragraphs(options)
 }
 
-fn to_regex(r: String, options, default: a, next: fn(regex.Regex) -> a) {
-  case regex.compile(r, options) {
+fn to_regex(r: String, options, default: a, next: fn(regexp.Regexp) -> a) {
+  case regexp.compile(r, options) {
     Ok(exp) -> next(exp)
     Error(e) -> {
       io.println_error(e.error)
@@ -66,10 +66,10 @@ fn to_regex(r: String, options, default: a, next: fn(regex.Regex) -> a) {
 fn replace_all(
   text: String,
   r: String,
-  get_replacement: fn(List(regex.Match)) -> String,
+  get_replacement: fn(List(regexp.Match)) -> String,
 ) {
   use exp <- to_regex(r, regex_options, text)
-  regex.scan(exp, text)
+  regexp.scan(exp, text)
   |> get_replacement
 }
 
@@ -77,7 +77,7 @@ fn replace(text: String, r: String, get_replacement: fn(List(String)) -> String)
   replace_all(text, r, list.fold(
     _,
     text,
-    fn(acc, match: regex.Match) {
+    fn(acc, match: regexp.Match) {
       string.replace(
         acc,
         match.content,
@@ -258,10 +258,10 @@ fn parse_list(text: String, options: Options) {
 
   use exp <- to_regex(
     "^(?:\\s*)[*+-]\\s",
-    regex.Options(case_insensitive: True, multi_line: False),
+    regexp.Options(case_insensitive: True, multi_line: False),
     text,
   )
-  let tag = case regex.check(exp, text) {
+  let tag = case regexp.check(exp, text) {
     True -> "ul"
     False -> "ol"
   }
